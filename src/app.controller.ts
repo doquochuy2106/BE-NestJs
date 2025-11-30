@@ -1,24 +1,37 @@
-import { Controller, Get, Render } from '@nestjs/common';
+import { Controller, Get, Post, Render, Request, UseGuards } from '@nestjs/common';
 import { AppService } from './app.service';
 import { ConfigService } from '@nestjs/config';
+import { AuthGuard } from '@nestjs/passport';
+import { LocalAuthGuard } from './auth/local-auth.guard';
+import { AuthService } from './auth/auth.service';
+import { JwtAuthGuard } from './auth/jwt-auth.guard';
+import { Public } from './decorator/customize';
 
 @Controller()
 export class AppController {
   constructor(
     private readonly appService: AppService,
-    private configService: ConfigService
+    private configService: ConfigService,
+    private authService: AuthService
   ) { }
 
-  @Get()
-  @Render('home')
-  handleHomePage() {
+  @UseGuards(LocalAuthGuard)
+  @Public()
+  @Post('login')
+  handleLogin(@Request() req) {
+    return this.authService.login(req.user)
+  }
 
-    console.log("check port: ", this.configService.get<string>("PORT"))
+  // @UseGuards(JwtAuthGuard)
 
-    const message1 = this.appService.getHello()
+  @Get('Profile')
+  getProfile(@Request() req) {
+    return req.user
+  }
 
-    return {
-      message: message1
-    }
+  // @UseGuards(JwtAuthGuard)
+  @Get('Profile1')
+  getProfile1(@Request() req) {
+    return req.user
   }
 }
