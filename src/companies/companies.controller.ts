@@ -1,8 +1,8 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { CompaniesService } from './companies.service';
 import { CreateCompanyDto } from './dto/create-company.dto';
 import { UpdateCompanyDto } from './dto/update-company.dto';
-import { User } from 'src/decorator/customize';
+import { ResponseMessage, User } from 'src/decorator/customize';
 import { IUsers } from 'src/users/users.interface';
 
 @Controller('companies')
@@ -11,7 +11,6 @@ export class CompaniesController {
 
   @Post()
   create(@Body() createCompanyDto: CreateCompanyDto, @User() user: IUsers) {
-    console.log("user infor: ", user)
     return this.companiesService.create(createCompanyDto, user);
   }
 
@@ -20,9 +19,15 @@ export class CompaniesController {
     return this.companiesService.update(id, updateCompanyDto, user);
   }
 
+
   @Get()
-  findAll() {
-    return this.companiesService.findAll();
+  @ResponseMessage("Get Company With Pagination")
+  findAll(
+    @Query('page') currentPage: string,
+    @Query('limit') limit: string,
+    @Query() qs: string
+  ) {
+    return this.companiesService.findAll(+currentPage, +limit, qs);
   }
 
   @Get(':id')

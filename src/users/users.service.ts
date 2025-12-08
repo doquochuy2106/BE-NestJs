@@ -1,5 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { CreateUserDto, RegisterUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { User, UserDocument } from './schemas/user.schema';
@@ -28,9 +28,29 @@ export class UsersService {
     })
 
     return user
-
   }
 
+  async register(registerDto: RegisterUserDto) {
+
+    const isExistEmail = this.userModel.findOne({ email: registerDto.email })
+    if (!isExistEmail) {
+      throw new BadRequestException(`Email: ${registerDto.email} đã tồn tại trên hệ thống! `)
+    }
+
+    const hasPassWord = this.getHashPassWord(registerDto.password)
+
+    let newRegisterUser = await this.userModel.create({
+      name: registerDto.name,
+      email: registerDto.email,
+      password: hasPassWord,
+      age: registerDto.age,
+      gender: registerDto.gender,
+      address: registerDto.address,
+      role: "USER"
+    })
+
+    return newRegisterUser
+  }
 
   findAll() {
     return `This action returns all users`;
