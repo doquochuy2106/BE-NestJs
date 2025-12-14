@@ -1,8 +1,10 @@
-import { Body, Controller, Get, Post, Request, UseGuards } from "@nestjs/common"
+import { Body, Controller, Get, Post, Req, Res, UseGuards } from "@nestjs/common"
 import { LocalAuthGuard } from "./local-auth.guard"
-import { Public, ResponseMessage } from "src/decorator/customize"
+import { Public, ResponseMessage, User } from "src/decorator/customize"
 import { AuthService } from "./auth.service"
 import { RegisterUserDto } from "src/users/dto/create-user.dto"
+import { Response, Request } from "express"
+import { IUsers } from "src/users/users.interface"
 
 
 @Controller("auth")
@@ -14,8 +16,11 @@ export class AuthController {
     @UseGuards(LocalAuthGuard)
     @Public()
     @Post('login')
-    handleLogin(@Request() req) {
-        return this.authService.login(req.user)
+    @ResponseMessage("Login Success!")
+    handleLogin(
+        @Req() req,
+        @Res({ passthrough: true }) response: Response) {
+        return this.authService.login(req.user, response)
     }
 
     @Public()
@@ -25,16 +30,16 @@ export class AuthController {
         return this.authService.register(registerDto)
     }
 
-    // @UseGuards(JwtAuthGuard)
-
-    @Get('Profile')
-    getProfile(@Request() req) {
-        return req.user
+    @Get("/account")
+    @ResponseMessage("Get account success!")
+    getAccount(@User() user: IUsers) {
+        return { user }
     }
 
-    // @UseGuards(JwtAuthGuard)
-    @Get('Profile1')
-    getProfile1(@Request() req) {
-        return req.user
+    @Public()
+    @Get("/refresh")
+    handleRefreshToken(@Req() request: Request, @Res({ passthrough: true }) response: Response) {
+        let refreshToken = request.cookies["refresh_token"]
+        return this.authService.processRefreshToken(refreshToken, response)
     }
 }
